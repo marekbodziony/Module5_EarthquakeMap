@@ -1,2 +1,3 @@
 # Module5_EarthquakeMap
-Module5 - EarthquakeMap for UCSD java project
+
+Interactive map showing earthquakes form last week (module 5 - project from University California - courera.org)
