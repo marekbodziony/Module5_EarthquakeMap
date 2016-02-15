@@ -11,6 +11,9 @@ import processing.core.PGraphics;
  */
 public class LandQuakeMarker extends EarthquakeMarker {
 	
+	public PointFeature quakeInfo;
+	private CommonMarker lastSelected;
+	
 	
 	public LandQuakeMarker(PointFeature quake) {
 		
@@ -19,6 +22,8 @@ public class LandQuakeMarker extends EarthquakeMarker {
 		
 		// setting field in earthquake marker
 		isOnLand = true;
+		
+		quakeInfo = quake;
 	}
 
 
@@ -26,6 +31,7 @@ public class LandQuakeMarker extends EarthquakeMarker {
 	@Override
 	public void drawEarthquake(PGraphics pg, float x, float y) {
 		pg.ellipse(x, y, 2*radius, 2*radius);
+		showTitle(pg,  x,  y);
 		
 	}
 	
@@ -35,5 +41,20 @@ public class LandQuakeMarker extends EarthquakeMarker {
 		return (String) getProperty("country");
 	}
 
+	public void showTitle(PGraphics pg, float x, float y){
+		
+		//String quakeCountry = quakeInfo.getProperty("country").toString();
+		//String quakeCity = quakeInfo.getProperty("city").toString();
+		
+		//System.out.println(quakeInfo.getProperties());
+		
+		//if(1==1){
+			//pg.fill(255);
+			//pg.rect(x, y, 100, 20);
+			//pg.fill(0);
+			//pg.text(quakeInfo.getProperties().toString(), x, y);
+		
+		//}
+	}
 		
 }
