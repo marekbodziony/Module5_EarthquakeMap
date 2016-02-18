@@ -162,15 +162,21 @@ public class EarthquakeCityMap extends PApplet {
 	 */
 	@Override
 	public void mouseClicked()
-	{
-		// TODO: Implement this method
-		// Hint: You probably want a helper method or two to keep this code
-		// from getting too long/disorganized
+	{		
+		if (lastClicked != null){
+						
+			showMarkers();
+			
+		}
+		if (lastClicked == null){
+			
+			hideMarkers();
+		}
 	}
 	
 	
-	// loop over and unhide all markers
-	private void unhideMarkers() {
+	// loop over and show all markers
+	private void showMarkers() {
 		for(Marker marker : quakeMarkers) {
 			marker.setHidden(false);
 		}
@@ -178,7 +184,33 @@ public class EarthquakeCityMap extends PApplet {
 		for(Marker marker : cityMarkers) {
 			marker.setHidden(false);
 		}
+		
 	}
+	
+	// loop over and hide all markers except selected marker 
+		private void hideMarkers() {
+			for(Marker marker : quakeMarkers) {
+				if((marker.isInside(map, mouseX, mouseY))&& (lastClicked == null)){
+					lastClicked = (CommonMarker) marker;
+					//lastClicked.setClicked(true);
+					marker.setHidden(false);
+				}
+				else{
+					marker.setHidden(true);
+					}
+			}
+				
+			for(Marker marker : cityMarkers) {
+				if((marker.isInside(map, mouseX, mouseY))&& (lastClicked == null)){
+					lastClicked = (CommonMarker) marker;
+					marker.setHidden(false);
+				}
+				else{
+					marker.setHidden(true);
+					}
+				}
+			
+		}
 	
 	// helper method to draw key in GUI
 	private void addKey() {	
