@@ -164,13 +164,18 @@ public class EarthquakeCityMap extends PApplet {
 	public void mouseClicked()
 	{		
 		if (lastClicked != null){
+			lastClicked.setClicked(false);
+			lastClicked = null;
 						
 			showMarkers();
+			System.out.println("Show markers");
 			
 		}
-		if (lastClicked == null){
+		else if (lastClicked == null){
+			//lastClicked.setClicked(true);			
 			
 			hideMarkers();
+			System.out.println("Hide markers");
 		}
 	}
 	
@@ -190,25 +195,31 @@ public class EarthquakeCityMap extends PApplet {
 	// loop over and hide all markers except selected marker 
 		private void hideMarkers() {
 			for(Marker marker : quakeMarkers) {
-				if((marker.isInside(map, mouseX, mouseY))&& (lastClicked == null)){
+				if(marker.isInside(map, mouseX, mouseY) && lastClicked == null){
 					lastClicked = (CommonMarker) marker;
-					//lastClicked.setClicked(true);
-					marker.setHidden(false);
+					lastClicked.setClicked(true);
+					lastClicked.setHidden(false);
 				}
-				else{
+				else  {
 					marker.setHidden(true);
-					}
+					}	
 			}
 				
 			for(Marker marker : cityMarkers) {
-				if((marker.isInside(map, mouseX, mouseY))&& (lastClicked == null)){
+				if(marker.isInside(map, mouseX, mouseY) && lastClicked == null){
 					lastClicked = (CommonMarker) marker;
-					marker.setHidden(false);
+					lastClicked.setClicked(true);
+					lastClicked.setHidden(false);
 				}
-				else{
+				else  {
 					marker.setHidden(true);
-					}
+					}	
 				}
+			
+			if (lastClicked == null){ 				//if none of markers was clicked it won't hide anything (shows all markers)
+				showMarkers();
+				System.out.println("Show markers");
+			}
 			
 		}
 	
