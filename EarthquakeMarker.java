@@ -1,6 +1,10 @@
 package module5;
 
 import de.fhpotsdam.unfolding.data.PointFeature;
+import de.fhpotsdam.unfolding.geo.Location;
+import de.fhpotsdam.unfolding.utils.GeoUtils;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
+import processing.core.PApplet;
 import processing.core.PGraphics;
 
 /** Implements a visual marker for earthquakes on an earthquake map
@@ -113,8 +117,20 @@ public abstract class EarthquakeMarker extends CommonMarker
 	 */
 	public double threatCircle() {	
 		double miles = 20.0f * Math.pow(1.8, 2*getMagnitude()-5);
-		double km = (miles * kmPerMile);
+		double km = (miles * kmPerMile); 	//quake treat circle radius in km
+		
 		return km;
+	}
+	
+	public float threatCircleInRadius(){
+		
+		Location quakeCenter = this.getLocation();
+		Location quakeFarEnd = GeoUtils.getDestinationLocation(quakeCenter, 0, (float)threatCircle());
+		
+		float radiusInPix = PApplet.dist(quakeCenter.getLat(), quakeCenter.getLon(), quakeFarEnd.getLat(), quakeFarEnd.getLon());
+				
+		System.out.println(radiusInPix);
+		return radiusInPix;
 	}
 	
 	// determine color of marker from depth
@@ -136,7 +152,7 @@ public abstract class EarthquakeMarker extends CommonMarker
 	// helper method to set the area where quake may affect (circle with middle in marker)
 		public void quakeDisasterArea(PGraphics pg, float x, float y){
 			pg.noFill();
-			pg.ellipse(x,y,(float)(threatCircle()),(float)(threatCircle()));
+			pg.ellipse(x,y,threatCircleInRadius(),threatCircleInRadius());
 					
 		}
 	
