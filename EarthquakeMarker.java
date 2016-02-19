@@ -66,6 +66,8 @@ public abstract class EarthquakeMarker extends CommonMarker
 		
 		// call abstract method implemented in child class to draw marker shape
 		drawEarthquake(pg, x, y);
+		// call method to set the area where quake affects
+		quakeDisasterArea(pg,x,y);
 		
 		// IMPLEMENT: add X over marker if within past day		
 		String age = getStringProperty("age");
@@ -131,6 +133,12 @@ public abstract class EarthquakeMarker extends CommonMarker
 		}
 	}
 	
+	// helper method to set the area where quake may affect (circle with middle in marker)
+		public void quakeDisasterArea(PGraphics pg, float x, float y){
+			pg.noFill();
+			pg.ellipse(x,y,(float)(threatCircle()),(float)(threatCircle()));
+					
+		}
 	
 	/*
 	 * getters for earthquake properties
