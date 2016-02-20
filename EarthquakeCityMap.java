@@ -13,7 +13,9 @@ import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
 import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
+import de.fhpotsdam.unfolding.utils.GeoUtils;
 import de.fhpotsdam.unfolding.utils.MapUtils;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import parsing.ParseFeed;
 import processing.core.PApplet;
 
@@ -54,6 +56,8 @@ public class EarthquakeCityMap extends PApplet {
 	private List<Marker> cityMarkers;
 	// Markers for each earthquake
 	private List<Marker> quakeMarkers;
+	// Markers for treat circle for each earthquake
+	private List<Marker> quakeTraetMarkers = new ArrayList<Marker>();
 
 	// A List of country markers
 	private List<Marker> countryMarkers;
@@ -222,7 +226,7 @@ public class EarthquakeCityMap extends PApplet {
 			}
 			
 		}
-	
+		
 	// helper method to draw key in GUI
 	private void addKey() {	
 		// Remember you can use Processing's graphics methods here
@@ -364,5 +368,29 @@ public class EarthquakeCityMap extends PApplet {
 		}
 		return false;
 	}
-
+	
+	public float threatCircle(Feature feature) {	
+		double magnitude = Float.parseFloat(feature.getProperty("magnitude").toString());
+		double miles = 20.0f * Math.pow(1.8, 2*magnitude-5);
+		double km = (miles * 1.6f); 	//quake treat circle radius in km
+		
+		Location center = feature.getLocation();
+		Location farEnd = GeoUtils.getDestinationLocation(center, 0, (float) km);
+		
+		ScreenPosition centerPoint = map.getScreenPosition(center);
+		ScreenPosition farEndPoint = map.getScreenPosition(farEnd);
+		
+		// quake treat circle radius set on map 
+		float radius = dist(centerPoint.x, centerPoint.y, farEndPoint.x, farEndPoint.y);
+		
+		return radius;
+	}
+	
+	public void setTreatCircleMarker (Feature marker){
+					
+			noFill();
+			ellipse(marker.getLocation().x,marker.getLocation().y,2*threatCircle(marker),2*threatCircle(marker));
+		
+	}
+	
 }
