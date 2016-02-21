@@ -102,7 +102,7 @@ public class EarthquakeCityMap extends PApplet {
 		  //check if LandQuake
 		  if(isLand(feature)) {
 		    quakeMarkers.add(new LandQuakeMarker(feature));
-		    //setTreatCircleMarker (new LandQuakeMarker(feature));
+		  
 		  }
 		  // OceanQuakes
 		  else {
@@ -127,8 +127,8 @@ public class EarthquakeCityMap extends PApplet {
 		background(0);
 		map.draw();
 		addKey();
-		setTreatCircleMarker();
-		
+		// this method could be used for debugging - it draw threat circle for every earthquake
+		//drawQuakeTreatCircle();
 	}
 	
 	/** Event handler that gets called automatically when the 
@@ -174,13 +174,10 @@ public class EarthquakeCityMap extends PApplet {
 			lastClicked.setClicked(false);
 			lastClicked = null;
 						
-			showMarkers();
-			System.out.println("Show markers");
-			
+			showMarkers();	
 		}
 		else if (lastClicked == null){
 			hideMarkers();
-			System.out.println("Hide markers");
 		}
 	}
 	
@@ -218,6 +215,8 @@ public class EarthquakeCityMap extends PApplet {
 					lastClicked = (CommonMarker) marker;
 					lastClicked.setClicked(true);
 					lastClicked.setHidden(false);
+					
+					whichQuakeCouldAffectThisCity(marker);
 				}
 				// if quake marker was clicked and there are cities affected by earthquake (they should be visible on the map)
 				else if (citiesAffectedByQuake.length > 0) {
@@ -228,7 +227,6 @@ public class EarthquakeCityMap extends PApplet {
 						if(marker.getProperty("name").toString() == citiesAffectedByQuake[i]){
 							marker.setHidden(false);
 							affectedCityShownOnMap = true;
-							System.out.println(i + ". " +citiesAffectedByQuake[i]);
 						}
 						else if(!affectedCityShownOnMap){
 							marker.setHidden(true);
@@ -244,7 +242,6 @@ public class EarthquakeCityMap extends PApplet {
 			
 			if (lastClicked == null){ 				//if none of markers was clicked it won't hide anything (shows all markers)
 				showMarkers();
-				System.out.println("Show markers");
 			}
 			
 		}
@@ -409,12 +406,11 @@ public class EarthquakeCityMap extends PApplet {
 		return threatCircleRadius;
 	}
 	
-	// helper method which draw threat circle for each earthquake (visual purpose only)
-	public void setTreatCircleMarker (){
+	// helper method to draw threat circle for each earthquake (visual purpose only)
+	public void drawQuakeTreatCircle (){
 			for (Marker marker : quakeMarkers){		
 				noFill();
 				ellipse(map.getScreenPosition(marker.getLocation()).x,map.getScreenPosition(marker.getLocation()).y,2*threatCircle(marker),2*threatCircle(marker));
-				//quakeTraetMarkers.add(marker);
 			}
 	}
 	
@@ -427,7 +423,7 @@ public class EarthquakeCityMap extends PApplet {
 			float distanceBetweenCityAndEarthquake = dist((map.getScreenPosition(city.getLocation())).x,(map.getScreenPosition(city.getLocation())).y,(map.getScreenPosition(marker.getLocation())).x,(map.getScreenPosition(marker.getLocation())).y);
 			
 			if (distanceBetweenCityAndEarthquake <= threatCircle(marker)){
-				//city.setHidden(false);
+
 				affectedCitiesTemp[howManyCitiesAffected] = city.getProperty("name").toString();
 				howManyCitiesAffected++;
 			}
@@ -438,12 +434,28 @@ public class EarthquakeCityMap extends PApplet {
 		for (int i = 0; i < howManyCitiesAffected; i ++){
 			if (affectedCitiesTemp[i]!=null){
 				affectedCitiesList[i] = affectedCitiesTemp[i];
-				
-				//System.out.println(affectedCitiesList[i]);
 			}
 		}
-				
 		return affectedCitiesList;
 	}
+	
+	// helper method which checks what cities could be affected by specific earthquake (distance between city and earthquake is less than threat circle)
+		public List<Marker> whichQuakeCouldAffectThisCity(Marker city){
+			
+			List<Marker> quakesAffectsCity = new ArrayList<Marker>(); 			
+					
+			for (Marker quake : quakeMarkers){
+				float distanceBetweenCityAndEarthquake = dist((map.getScreenPosition(city.getLocation())).x,(map.getScreenPosition(city.getLocation())).y,(map.getScreenPosition(quake.getLocation())).x,(map.getScreenPosition(quake.getLocation())).y);
+				
+				if (distanceBetweenCityAndEarthquake <= threatCircle(quake)){
+					quakesAffectsCity.add(quake);
+				}
+			}
+			// get all quakes that affect selected city in a list of markers 
+			for (int i = 0; i < quakesAffectsCity.size(); i++){
+				quakesAffectsCity.get(i).setHidden(false);
+			}
+			return quakesAffectsCity;
+		}
 	
 }
