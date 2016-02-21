@@ -392,7 +392,7 @@ public class EarthquakeCityMap extends PApplet {
 		return threatCircleRadius;
 	}
 	
-	// helper method which draw threat cirkle for each earthquake (visual purpose only)
+	// helper method which draw threat circle for each earthquake (visual purpose only)
 	public void setTreatCircleMarker (){
 			for (Marker marker : quakeMarkers){		
 				noFill();
@@ -402,15 +402,22 @@ public class EarthquakeCityMap extends PApplet {
 	}
 	
 	// helper method which checks what cities could be affected by specific earthquake (distance between city and earthquake is less than threat circle)
-	public void whichCityCouldBeAffected(Marker marker){
+	public String [] whichCityCouldBeAffected(Marker marker){
+		String [] affectedCities = new String [cityMarkers.size()];
+		int howManyCitiesAffected = 0;
 	
 		for (Marker city : cityMarkers){
 			float distanceBetweenCityAndEarthquake = dist((map.getScreenPosition(city.getLocation())).x,(map.getScreenPosition(city.getLocation())).y,(map.getScreenPosition(marker.getLocation())).x,(map.getScreenPosition(marker.getLocation())).y);
 			
 			if (distanceBetweenCityAndEarthquake <= threatCircle(marker)){
 				city.setHidden(false);
+				affectedCities[howManyCitiesAffected] = city.getProperty("name").toString();
+				
+				System.out.println(affectedCities[howManyCitiesAffected]);
+				howManyCitiesAffected++;
 			}
 		}
+		return affectedCities;
 	}
 	
 }
