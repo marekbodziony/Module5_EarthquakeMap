@@ -57,7 +57,7 @@ public class EarthquakeCityMap extends PApplet {
 	// Markers for each earthquake
 	private List<Marker> quakeMarkers;
 	// Markers for treat circle for each earthquake
-	private List<Marker> quakeTraetMarkers = new ArrayList<Marker>();
+	private List<Marker> quakeTraetMarkers;
 
 	// A List of country markers
 	private List<Marker> countryMarkers;
@@ -101,6 +101,7 @@ public class EarthquakeCityMap extends PApplet {
 		  //check if LandQuake
 		  if(isLand(feature)) {
 		    quakeMarkers.add(new LandQuakeMarker(feature));
+		    //setTreatCircleMarker (new LandQuakeMarker(feature));
 		  }
 		  // OceanQuakes
 		  else {
@@ -125,6 +126,7 @@ public class EarthquakeCityMap extends PApplet {
 		background(0);
 		map.draw();
 		addKey();
+		setTreatCircleMarker();
 		
 	}
 	
@@ -198,11 +200,14 @@ public class EarthquakeCityMap extends PApplet {
 	
 	// loop over and hide all markers except selected marker 
 		private void hideMarkers() {
+				
 			for(Marker marker : quakeMarkers) {
 				if(marker.isInside(map, mouseX, mouseY) && lastClicked == null){
 					lastClicked = (CommonMarker) marker;
 					lastClicked.setClicked(true);
 					lastClicked.setHidden(false);
+					
+					whichCityCouldBeAffected(marker); // affected cities should be also shown on a map
 				}
 				else  {
 					marker.setHidden(true);
@@ -369,28 +374,43 @@ public class EarthquakeCityMap extends PApplet {
 		return false;
 	}
 	
-	public float threatCircle(Feature feature) {	
-		double magnitude = Float.parseFloat(feature.getProperty("magnitude").toString());
+	// helper method that calculate threat circle of earthquake
+	public float threatCircle(Marker marker) {	
+		double magnitude = Float.parseFloat(marker.getProperty("magnitude").toString());
 		double miles = 20.0f * Math.pow(1.8, 2*magnitude-5);
 		double km = (miles * 1.6f); 	//quake treat circle radius in km
 		
-		Location center = feature.getLocation();
+		Location center = marker.getLocation();
 		Location farEnd = GeoUtils.getDestinationLocation(center, 0, (float) km);
 		
 		ScreenPosition centerPoint = map.getScreenPosition(center);
 		ScreenPosition farEndPoint = map.getScreenPosition(farEnd);
 		
 		// quake treat circle radius set on map 
-		float radius = dist(centerPoint.x, centerPoint.y, farEndPoint.x, farEndPoint.y);
+		float threatCircleRadius = dist(centerPoint.x, centerPoint.y, farEndPoint.x, farEndPoint.y);
 		
-		return radius;
+		return threatCircleRadius;
 	}
 	
-	public void setTreatCircleMarker (Feature marker){
-					
-			noFill();
-			ellipse(marker.getLocation().x,marker.getLocation().y,2*threatCircle(marker),2*threatCircle(marker));
-		
+	// helper method which draw threat cirkle for each earthquake (visual purpose only)
+	public void setTreatCircleMarker (){
+			for (Marker marker : quakeMarkers){		
+				noFill();
+				ellipse(map.getScreenPosition(marker.getLocation()).x,map.getScreenPosition(marker.getLocation()).y,2*threatCircle(marker),2*threatCircle(marker));
+				//quakeTraetMarkers.add(marker);
+			}
+	}
+	
+	// helper method which checks what cities could be affected by specific earthquake (distance between city and earthquake is less than threat circle)
+	public void whichCityCouldBeAffected(Marker marker){
+	
+		for (Marker city : cityMarkers){
+			float distanceBetweenCityAndEarthquake = dist((map.getScreenPosition(city.getLocation())).x,(map.getScreenPosition(city.getLocation())).y,(map.getScreenPosition(marker.getLocation())).x,(map.getScreenPosition(marker.getLocation())).y);
+			
+			if (distanceBetweenCityAndEarthquake <= threatCircle(marker)){
+				city.setHidden(false);
+			}
+		}
 	}
 	
 }
