@@ -13,7 +13,9 @@ import de.fhpotsdam.unfolding.marker.Marker;
 import de.fhpotsdam.unfolding.marker.MultiMarker;
 import de.fhpotsdam.unfolding.providers.Google;
 import de.fhpotsdam.unfolding.providers.MBTilesMapProvider;
+import de.fhpotsdam.unfolding.utils.GeoUtils;
 import de.fhpotsdam.unfolding.utils.MapUtils;
+import de.fhpotsdam.unfolding.utils.ScreenPosition;
 import parsing.ParseFeed;
 import processing.core.PApplet;
 
@@ -54,7 +56,10 @@ public class EarthquakeCityMap extends PApplet {
 	private List<Marker> cityMarkers;
 	// Markers for each earthquake
 	private List<Marker> quakeMarkers;
-
+	
+	// list of cities that could be affected by earthquake (should be visible on a map when quake markers is selected)
+	String [] citiesAffectedByQuake = new String[1];
+	
 	// A List of country markers
 	private List<Marker> countryMarkers;
 	
@@ -97,6 +102,7 @@ public class EarthquakeCityMap extends PApplet {
 		  //check if LandQuake
 		  if(isLand(feature)) {
 		    quakeMarkers.add(new LandQuakeMarker(feature));
+		    //setTreatCircleMarker (new LandQuakeMarker(feature));
 		  }
 		  // OceanQuakes
 		  else {
@@ -121,6 +127,7 @@ public class EarthquakeCityMap extends PApplet {
 		background(0);
 		map.draw();
 		addKey();
+		setTreatCircleMarker();
 		
 	}
 	
@@ -172,13 +179,10 @@ public class EarthquakeCityMap extends PApplet {
 			
 		}
 		else if (lastClicked == null){
-			//lastClicked.setClicked(true);			
-			
 			hideMarkers();
 			System.out.println("Hide markers");
 		}
 	}
-	
 	
 	// loop over and show all markers
 	private void showMarkers() {
@@ -194,11 +198,14 @@ public class EarthquakeCityMap extends PApplet {
 	
 	// loop over and hide all markers except selected marker 
 		private void hideMarkers() {
+				
 			for(Marker marker : quakeMarkers) {
 				if(marker.isInside(map, mouseX, mouseY) && lastClicked == null){
 					lastClicked = (CommonMarker) marker;
 					lastClicked.setClicked(true);
 					lastClicked.setHidden(false);
+					
+					citiesAffectedByQuake = whichCityCouldBeAffected(marker); 		// gives a list of cities affected by earthquake
 				}
 				else  {
 					marker.setHidden(true);
@@ -206,15 +213,34 @@ public class EarthquakeCityMap extends PApplet {
 			}
 				
 			for(Marker marker : cityMarkers) {
+				// if city marker was clicked
 				if(marker.isInside(map, mouseX, mouseY) && lastClicked == null){
 					lastClicked = (CommonMarker) marker;
 					lastClicked.setClicked(true);
 					lastClicked.setHidden(false);
 				}
-				else  {
-					marker.setHidden(true);
-					}	
+				// if quake marker was clicked and there are cities affected by earthquake (they should be visible on the map)
+				else if (citiesAffectedByQuake.length > 0) {
+					
+					boolean affectedCityShownOnMap = false;
+					
+					for (int i = 0; i < citiesAffectedByQuake.length; i++){
+						if(marker.getProperty("name").toString() == citiesAffectedByQuake[i]){
+							marker.setHidden(false);
+							affectedCityShownOnMap = true;
+							System.out.println(i + ". " +citiesAffectedByQuake[i]);
+						}
+						else if(!affectedCityShownOnMap){
+							marker.setHidden(true);
+						}
+					}
 				}
+				// if quake marker was clicked and there is no city affected by quake
+				else {
+					marker.setHidden(true);
+				}
+			}
+			citiesAffectedByQuake = new String[0]; // reset list of affected cities
 			
 			if (lastClicked == null){ 				//if none of markers was clicked it won't hide anything (shows all markers)
 				showMarkers();
@@ -222,7 +248,7 @@ public class EarthquakeCityMap extends PApplet {
 			}
 			
 		}
-	
+		
 	// helper method to draw key in GUI
 	private void addKey() {	
 		// Remember you can use Processing's graphics methods here
@@ -364,5 +390,60 @@ public class EarthquakeCityMap extends PApplet {
 		}
 		return false;
 	}
-
+	
+	// helper method that calculate threat circle of earthquake
+	public float threatCircle(Marker marker) {	
+		double magnitude = Float.parseFloat(marker.getProperty("magnitude").toString());
+		double miles = 20.0f * Math.pow(1.8, 2*magnitude-5);
+		double km = (miles * 1.6f); 	//quake treat circle radius in km
+		
+		Location center = marker.getLocation();
+		Location farEnd = GeoUtils.getDestinationLocation(center, 0, (float) km);
+		
+		ScreenPosition centerPoint = map.getScreenPosition(center);
+		ScreenPosition farEndPoint = map.getScreenPosition(farEnd);
+		
+		// quake treat circle radius set on map 
+		float threatCircleRadius = dist(centerPoint.x, centerPoint.y, farEndPoint.x, farEndPoint.y);
+		
+		return threatCircleRadius;
+	}
+	
+	// helper method which draw threat circle for each earthquake (visual purpose only)
+	public void setTreatCircleMarker (){
+			for (Marker marker : quakeMarkers){		
+				noFill();
+				ellipse(map.getScreenPosition(marker.getLocation()).x,map.getScreenPosition(marker.getLocation()).y,2*threatCircle(marker),2*threatCircle(marker));
+				//quakeTraetMarkers.add(marker);
+			}
+	}
+	
+	// helper method which checks what cities could be affected by specific earthquake (distance between city and earthquake is less than threat circle)
+	public String [] whichCityCouldBeAffected(Marker marker){
+		String [] affectedCitiesTemp = new String [cityMarkers.size()];
+		int howManyCitiesAffected = 0;
+	
+		for (Marker city : cityMarkers){
+			float distanceBetweenCityAndEarthquake = dist((map.getScreenPosition(city.getLocation())).x,(map.getScreenPosition(city.getLocation())).y,(map.getScreenPosition(marker.getLocation())).x,(map.getScreenPosition(marker.getLocation())).y);
+			
+			if (distanceBetweenCityAndEarthquake <= threatCircle(marker)){
+				//city.setHidden(false);
+				affectedCitiesTemp[howManyCitiesAffected] = city.getProperty("name").toString();
+				howManyCitiesAffected++;
+			}
+		}
+		
+		// list of cities affected by selected earthquake
+		String [] affectedCitiesList = new String[howManyCitiesAffected];		
+		for (int i = 0; i < howManyCitiesAffected; i ++){
+			if (affectedCitiesTemp[i]!=null){
+				affectedCitiesList[i] = affectedCitiesTemp[i];
+				
+				//System.out.println(affectedCitiesList[i]);
+			}
+		}
+				
+		return affectedCitiesList;
+	}
+	
 }
